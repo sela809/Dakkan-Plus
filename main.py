@@ -4,7 +4,7 @@ from streamlit_option_menu import option_menu
 # إعدادات الصفحة
 st.set_page_config(page_title="دكان بلس", page_icon="🏪", layout="wide")
 
-# تصميم الواجهة - تم إصلاح الخطأ هنا واستبداله بـ unsafe_allow_html=True
+# تصميم الواجهة
 st.markdown("""
 <style>
     @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@700&display=swap');
@@ -24,7 +24,6 @@ if identity == "دخول المشتري (المتفرج)":
     st.subheader("🔦 ماذا تبحث عنه اليوم؟")
     search_input = st.text_input("🔍 ابحث بالكتابة (خروف، فستان، بنزين...)", placeholder="اكتب هنا...")
     
-    # 2. المعرض الشجري
     st.write("### 🎪 الأقسام الرئيسية")
     col1, col2, col3 = st.columns(3)
     
@@ -50,30 +49,6 @@ if identity == "دخول المشتري (المتفرج)":
     st.divider()
     st.write("⛽ **خدمات أخرى:**")
     st.button("📍 أقرب محطة بنزين / غاز")
-
-elif identity == "لوحة تحكم التاجر":
-    st.warning("🔐 هذه المنطقة محمية. يرجى تسجيل الدخول للوصول إلى (دفتر الشكك) وسحب بيانات الخرائط.")
-    st.text_input("كود التاجر السري", type="password")
-    st.button("دخول الخزانة")
-
-st.info("💡 نصيحة دكان بلس: دائماً ابحث عن التاجر ذو التقييم العالي لضمان المصداقية.")
-    with col2:
-        with st.expander("🦜 الطيور"):
-            st.button("🐣 طيور تربية")
-            st.button("🦜 طيور زينة")
-            st.button("🏗️ فقاسات ومعدات")
-            
-    with col3:
-        with st.expander("👕 الملابس والأزياء"):
-            st.button("👔 رجالي وشبابي")
-            st.button("👗 حريمي وبناتي")
-            st.button("👶 أطفال")
-            st.button("👠 أحذية وشنط")
-
-    st.divider()
-    with st.container():
-        st.write("⛽ **خدمات أخرى:**")
-        st.button("📍 أقرب محطة بنزين / غاز")
 
 elif identity == "لوحة تحكم التاجر":
     st.warning("🔐 هذه المنطقة محمية. يرجى تسجيل الدخول للوصول إلى (دفتر الشكك) وسحب بيانات الخرائط.")
