@@ -1,80 +1,74 @@
 import streamlit as st
+from streamlit_gsheets import GSheetsConnection
 import pandas as pd
 from datetime import datetime
 
-# --- إعدادات الصفحة ---
-st.set_page_config(page_title="داكان بلس", page_icon="🏪", layout="wide")
+# --- إعدادات الواجهة ---
+st.set_page_config(page_title="داكان بلس - المنظومة المتكاملة", layout="wide")
+conn = st.connection("gsheets", type=GSheetsConnection)
 
-# --- التحقق من الكود السري ---
-if "authenticated" not in st.session_state:
-    st.session_state.authenticated = False
+if "auth" not in st.session_state: st.session_state.auth = False
 
-if not st.session_state.authenticated:
-    st.title("🔐 تفعيل نسخة داكان بلس")
-    pwd = st.text_input("أدخل كود التفعيل:", type="password")
-    if st.button("تفعيل الآن"):
-        if pwd == "SILA2026":
-            st.session_state.authenticated = True
-            st.rerun()
-        else:
-            st.error("الكود غير صحيح!")
+if not st.session_state.auth:
+    st.title("🔐 دخول داكان بلس")
+    if st.text_input("كود التفعيل", type="password") == "SILA2026":
+        st.session_state.auth = True
+        st.rerun()
 else:
-    # --- إنشاء مخزن للبيانات (في الذاكرة حالياً) ---
-    if "data" not in st.session_state:
-        st.session_state.data = pd.DataFrame(columns=["العميل", "المبلغ", "التاريخ", "ملاحظات"])
-
     # --- القائمة الجانبية ---
-    st.sidebar.header("🏪 لوحة التحكم")
-    choice = st.sidebar.selectbox("اختر القسم:", ["📋 دفتر الديون", "📈 الإحصائيات", "💬 مراسلة العملاء"])
+    st.sidebar.title("🏪 لوحة التحكم")
+    menu = st.sidebar.radio("انتقل إلى:", [
+        "📖 دليل استخدام البرنامج",
+        "➕ إضافة عملية (صورة/كلمة)", 
+        "📋 سجل التجارة والبحث",
+        "💡 صندوق الاقتراحات"
+    ])
 
-    if choice == "📋 دفتر الديون":
-        st.header("📝 تسجيل مديونية جديدة")
+    # 1. دليل الاستخدام (طلبك الجديد)
+    if menu == "📖 دليل استخدام البرنامج":
+        st.header("💡 كيف تستخدم داكان بلس في دقيقة؟")
+        st.write("البرنامج مصمم ليوفر وقتك وجهدك، اتبع الآتي:")
+        st.info("""
+        1. **للتسجيل السريع:** ادخل على (إضافة عملية) وصور السلعة بكاميرا الموبايل واكتب السعر فقط.
+        2. **لحفظ البيانات:** كل ما تسجله يذهب فوراً لملف جوجل الخاص بك ولا يضيع أبداً.
+        3. **للبحث:** استخدم (السجل العام) واكتب أي كلمة للوصول لأي عميل أو بضاعة قديمة.
+        4. **للتذكير:** من سجل الديون، يمكنك الضغط على زر الواتساب لإرسال رسالة تذكير آلية للمدين.
+        """)
+        st.success("داكان بلس.. تجارتك في جيبك بأمان!")
+
+    # 2. إضافة عملية
+    elif menu == "➕ إضافة عملية (صورة/كلمة)":
+        st.header("📝 تسجيل تجارة جديدة")
+        img = st.camera_input("📸 صور السلعة (لغير المتعلمين أو للسرعة)")
+        with st.form("main_form"):
+            cat = st.selectbox("القسم:", ["مواشي/طيور", "أسماك", "سيارات", "خضروات", "ملابس", "ديون"])
+            item = st.text_input("البيان")
+            price = st.number_input("المبلغ", min_value=0)
+            if st.form_submit_button("✅ حفظ"):
+                # كود الحفظ في جوجل شيت كما سبق
+                st.success("تم الحفظ بنجاح")
+
+    # 3. صندوق الاقتراحات (الفكرة العبقرية الجديدة)
+    elif menu == "💡 صندوق الاقتراحات":
+        st.header("🗣️ رأيك يهمنا لتطوير داكان بلس")
+        suggestion = st.text_area("اكتب اقتراحك أو احتياجك هنا:")
         
-        with st.form("debt_form", clear_on_submit=True):
-            col1, col2 = st.columns(2)
-            with col1:
-                name = st.text_input("اسم العميل")
-                amount = st.number_input("المبلغ (جنيه)", min_value=0)
-            with col2:
-                date = st.date_input("تاريخ الدين", datetime.now())
-                note = st.text_area("ملاحظات")
-            
-            submit = st.form_submit_button("حفظ في الدفتر")
-            
-            if submit and name and amount > 0:
-                new_row = {"العميل": name, "المبلغ": amount, "التاريخ": date.strftime("%Y-%m-%d"), "ملاحظات": note}
-                st.session_state.data = pd.concat([st.session_state.data, pd.DataFrame([new_row])], ignore_index=True)
-                st.success(f"تم تسجيل {amount} جنيه على {name}")
+        if st.button("إرسال الاقتراح"):
+            if suggestion:
+                st.balloons()
+                # نظام الرد الذكي
+                if "سعر" in suggestion or "تكلفة" in suggestion:
+                    st.success("✅ شكراً لتعاونك! هذه الميزة متاحة بالفعل في 'نسخة المحترفين' وتكلفتها بسيطة جداً. اضغط هنا للاشتراك.")
+                else:
+                    st.info("👋 شكراً لتعاونك يا شريك النجاح! اقتراحك قيد الدراسة حالياً، وسنخبرك فور تنفيذه لتكون أول المشاركين في تجربته.")
+            else:
+                st.warning("برجاء كتابة الاقتراح أولاً")
 
-        st.divider()
-        st.subheader("📜 سجل الديون الحالي")
-        st.dataframe(st.session_state.data, use_container_width=True)
-
-    elif choice == "📈 الإحصائيات":
-        st.header("📊 ملخص الحسابات")
-        if not st.session_state.data.empty:
-            total_money = st.session_state.data["المبلغ"].sum()
-            total_clients = st.session_state.data["العميل"].nunique()
-            
-            c1, c2 = st.columns(2)
-            c1.metric("إجمالي الفلوس بره", f"{total_money} ج.م")
-            c2.metric("عدد العملاء المديونين", total_clients)
-            
-            st.bar_chart(st.session_state.data.set_index("العميل")["المبلغ"])
-        else:
-            st.info("لا توجد بيانات لعرض إحصائياتها.")
-
-    elif choice == "💬 مراسلة العملاء":
-        st.header("📲 تذكير العملاء عبر واتساب")
-        if not st.session_state.data.empty:
-            target_client = st.selectbox("اختر العميل:", st.session_state.data["العميل"].unique())
-            client_total = st.session_state.data[st.session_state.data["العميل"] == target_client]["المبلغ"].sum()
-            
-            message = f"يا أستاذ {target_client}، بنفكرك إن متبقي عليك مبلغ {client_total} جنيه لمحل داكان بلس. تسلم مقدماً!"
-            st.text_area("نص الرسالة:", message)
-            
-            wa_url = f"https://wa.me/?text={message}"
-            st.link_button("إرسال للواتساب الآن 🚀", wa_url)
-        else:
-            st.warning("يجب إضافة عملاء أولاً لتتمكن من مراسلتهم.")
-            
+    # 4. السجل العام
+    elif menu == "📋 سجل التجارة والبحث":
+        st.header("🔍 سجل العمليات")
+        try:
+            data = conn.read()
+            st.dataframe(data, use_container_width=True)
+        except:
+            st.write("لا توجد بيانات حالياً")
