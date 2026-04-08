@@ -1,39 +1,110 @@
 import streamlit as st
 from streamlit_option_menu import option_menu
 import pandas as pd
+import urllib.parse
+from datetime import datetime
 
-# 1. إعدادات الصفحة
-st.set_page_config(page_title="دكان بلس", page_icon="🏪", layout="wide")
+# 1. إعدادات الصفحة الفخمة
+st.set_page_config(page_title="دكان بلس | DAKKAN PLUS", page_icon="🏪", layout="wide")
 
-# 2. تحسين المظهر (CSS)
+# 2. لمسات الجمال (CSS) لـ "شد" المستخدم
 st.markdown("""
 <style>
-    @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@700&display=swap');
+    @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;700&display=swap');
     html, body, [class*="css"] { font-family: 'Cairo', sans-serif; text-align: right; direction: rtl; }
-    .stButton>button { border-radius: 12px; width: 100%; background-color: #2e8b57; color: white; }
-    .stDataFrame { direction: rtl; }
+    .stButton>button { border-radius: 15px; width: 100%; background: linear-gradient(45deg, #2e8b57, #3cb371); color: white; border: none; height: 3.5em; font-weight: bold; }
+    .stExpander { background-color: white; border-radius: 15px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
 </style>
 """, unsafe_allow_html=True)
 
-# 3. إدارة البيانات (في ذاكرة المتصفح مؤقتاً)
-if "authenticated" not in st.session_state:
-    st.session_state.authenticated = False
-if "clients_db" not in st.session_state:
-    # قاعدة بيانات افتراضية للبدء
-    st.session_state.clients_db = pd.DataFrame(columns=["الاسم", "المبلغ", "الحالة"])
+# 3. إدارة الحالة (Session State)
+if "step" not in st.session_state: st.session_state.step = "register"
+if "db" not in st.session_state: st.session_state.db = pd.DataFrame(columns=["الاسم", "المبلغ", "الموبايل", "الحالة", "التقييم"])
 
-st.markdown("<h1 style='text-align: center; color: #2e8b57;'>🏪 دكان بلس</h1>", unsafe_allow_html=True)
+st.markdown("<h1 style='text-align: center; color: #2e8b57;'>👑 دكان بلس</h1>", unsafe_allow_html=True)
+st.markdown("<p style='text-align: center; font-size: 1.2em;'>حيث تلتقي المصداقية بالتجارة الذكية</p>", unsafe_allow_html=True)
 
-# 4. القائمة الرئيسية
-choice = option_menu(None, ["دخول المشتري", "لوحة التاجر"], 
-    icons=['cart', 'lock'], orientation="horizontal")
+# --- المرحلة الأولى: بوابة الدخول الموحدة ---
+if st.session_state.step == "register":
+    col1, col2, col3 = st.columns([1, 2, 1])
+    with col2:
+        st.subheader("📝 سجل هويتك التجارية")
+        u_name = st.text_input("الأسم الكامل (صاحب الدكان/المشتري)")
+        u_phone = st.text_input("رقم الواتساب الفعال")
+        u_type = st.selectbox("نوع النشاط", ["تاجر (عرض وتحصيل)", "مشتري (بحث وتصفح)"])
+        
+        if st.button("انطلق للإمبراطورية 🚀"):
+            if u_name and u_phone:
+                st.session_state.update({"u_name": u_name, "u_phone": u_phone, "u_type": u_type, "step": "home"})
+                st.balloons(); st.rerun()
 
-if choice == "دخول المشتري":
-    st.session_state.authenticated = False
-    st.subheader("🔎 استكشف الأقسام")
-    
-    col1, col2, col3, col4 = st.columns(4)
-    with col1:
+# --- المرحلة الثانية: قلب التطبيق ---
+elif st.session_state.step == "home":
+    choice = option_menu(None, ["المعرض الشامل", "دفتر الشكك الذكي", "محرك الصيد (قريباً)"], 
+        icons=['shop', 'journal-check', 'radar'], orientation="horizontal",
+        styles={"nav-link-selected": {"background-color": "#2e8b57"}})
+
+    # --- 1. المعرض البصري (شجري) ---
+    if choice == "المعرض الشامل":
+        st.info(f"مرحباً {st.session_state.u_name} | أنت الآن في المول الرقمي 🎪")
+        
+        # ميزة البحث (صوت/كتابة)
+        search = st.text_input("🎙️ ابحث بالصوت أو اكتب (خروف، جزمة، بنزين...)", placeholder="ماذا يدور في عقلك؟")
+        
+        c1, c2, c3 = st.columns(3)
+        with c1:
+            with st.expander("🐮 الحيوانات والأعلاف"):
+                if st.button("📸 إضافة منتج حيواني (للتاجر)"): st.camera_input("صور السلعة")
+                st.write("🐑 خراف عيد\n🐄 عجول تسمين\n🌾 ذرة وأعلاف مركبة")
+        with c2:
+            with st.expander("👕 الملابس والأزياء"):
+                st.write("👔 رجالي وشبابي\n👗 حريمي ولانجري\n👶 أطفال وأحذية")
+        with c3:
+            with st.expander("⛽ الخدمات والبنزين"):
+                st.write("📍 أقرب محطة\n🔥 غاز ومستلزمات")
+
+    # --- 2. دفتر الشكك (قوة التاجر) ---
+    elif choice == "دفتر الشكك الذكي":
+        if st.session_state.u_type == "تاجر (عرض وتحصيل)":
+            tab_view, tab_add = st.tabs(["📊 كشف حساب الديون", "➕ إضافة مديون جديد"])
+            
+            with tab_view:
+                if not st.session_state.db.empty:
+                    for idx, row in st.session_state.db.iterrows():
+                        with st.container():
+                            st.markdown(f"**👤 {row['الاسم']}** | 💰 {row['المبلغ']} ج.م | ⭐ تقييم: {row['التقييم']}")
+                            
+                            # ميزة "جدولة الرخامة" والواتساب
+                            msg = f"تحية من *دكان بلس* 👑\nنذكركم بموعد القسط بقيمة {row['المبلغ']} ج.م لمحل {st.session_state.u_name}.\n*اليقين دائماً يكسب* ✨"
+                            link = f"https://wa.me/{row['الموبايل']}?text={urllib.parse.quote(msg)}"
+                            
+                            col_a, col_b = st.columns(2)
+                            col_a.markdown(f"[🔔 إرسال تنبيه واتساب]({link})")
+                            if col_b.button(f"تصفية الحساب ✅", key=f"pay_{idx}"):
+                                st.session_state.db.drop(idx, inplace=True); st.rerun()
+                else: st.write("الدفتر نظيف.. لا يوجد ديون.")
+
+            with tab_add:
+                st.subheader("تسجيل مديونية جديدة")
+                n_n = st.text_input("اسم العميل")
+                n_p = st.text_input("واتساب العميل")
+                n_m = st.number_input("قيمة الدين", min_value=0)
+                n_r = st.select_slider("تقييم التزام العميل (سري للتاجر)", options=["ملاوع 😡", "متوسط 😐", "ملتزم 💎"])
+                
+                if st.button("حفظ في الخزنة 💾"):
+                    new_rec = pd.DataFrame([{"الاسم": n_n, "المبلغ": n_m, "الموبايل": n_p, "الحالة": "مطلوب", "التقييم": n_r}])
+                    st.session_state.db = pd.concat([st.session_state.db, new_rec], ignore_index=True)
+                    st.success("تم الحفظ والجدولة."); st.rerun()
+        else:
+            st.warning("⚠️ عذراً، هذا القسم مخصص للتجار فقط لإدارة حساباتهم.")
+
+    # --- 3. تسجيل الخروج ---
+    if st.sidebar.button("تسجيل الخروج"):
+        st.session_state.step = "register"
+        st.rerun()
+
+st.markdown("---")
+st.markdown("<p style='text-align: center; color: gray;'>بإشراف المهندس سيلا | دكان بلس 2026 👑</p>", unsafe_allow_html=True)
         with st.expander("🐮 الحيوانات"):
             st.write("🐑 أغنام - 🐄 مواشي")
     with col2:
