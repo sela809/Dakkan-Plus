@@ -1,2 +1,6 @@
 st-gsheets-connection
 pandas
+streamlit-option_menu
+streamlit-lottie
+requests
+extra-streamlit-components
