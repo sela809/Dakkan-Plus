@@ -105,6 +105,77 @@ elif st.session_state.step == "home":
 
 st.markdown("---")
 st.markdown("<p style='text-align: center; color: gray;'>بإشراف المهندس سيلا | دكان بلس 2026 👑</p>", unsafe_allow_html=True)
+            if u_name and u_phone:
+                st.session_state.update({"u_name": u_name, "u_phone": u_phone, "u_type": u_type, "step": "home"})
+                st.balloons(); st.rerun()
+
+# --- المرحلة الثانية: قلب التطبيق ---
+elif st.session_state.step == "home":
+    choice = option_menu(None, ["المعرض الشامل", "دفتر الشكك الذكي", "محرك الصيد (قريباً)"], 
+        icons=['shop', 'journal-check', 'radar'], orientation="horizontal",
+        styles={"nav-link-selected": {"background-color": "#2e8b57"}})
+
+    # --- 1. المعرض البصري (شجري) ---
+    if choice == "المعرض الشامل":
+        st.info(f"مرحباً {st.session_state.u_name} | أنت الآن في المول الرقمي 🎪")
+        
+        # ميزة البحث (صوت/كتابة)
+        search = st.text_input("🎙️ ابحث بالصوت أو اكتب (خروف، جزمة، بنزين...)", placeholder="ماذا يدور في عقلك؟")
+        
+        c1, c2, c3 = st.columns(3)
+        with c1:
+            with st.expander("🐮 الحيوانات والأعلاف"):
+                if st.button("📸 إضافة منتج حيواني (للتاجر)"): st.camera_input("صور السلعة")
+                st.write("🐑 خراف عيد\n🐄 عجول تسمين\n🌾 ذرة وأعلاف مركبة")
+        with c2:
+            with st.expander("👕 الملابس والأزياء"):
+                st.write("👔 رجالي وشبابي\n👗 حريمي ولانجري\n👶 أطفال وأحذية")
+        with c3:
+            with st.expander("⛽ الخدمات والبنزين"):
+                st.write("📍 أقرب محطة\n🔥 غاز ومستلزمات")
+
+    # --- 2. دفتر الشكك (قوة التاجر) ---
+    elif choice == "دفتر الشكك الذكي":
+        if st.session_state.u_type == "تاجر (عرض وتحصيل)":
+            tab_view, tab_add = st.tabs(["📊 كشف حساب الديون", "➕ إضافة مديون جديد"])
+            
+            with tab_view:
+                if not st.session_state.db.empty:
+                    for idx, row in st.session_state.db.iterrows():
+                        with st.container():
+                            st.markdown(f"**👤 {row['الاسم']}** | 💰 {row['المبلغ']} ج.م | ⭐ تقييم: {row['التقييم']}")
+                            
+                            # ميزة "جدولة الرخامة" والواتساب
+                            msg = f"تحية من *دكان بلس* 👑\nنذكركم بموعد القسط بقيمة {row['المبلغ']} ج.م لمحل {st.session_state.u_name}.\n*اليقين دائماً يكسب* ✨"
+                            link = f"https://wa.me/{row['الموبايل']}?text={urllib.parse.quote(msg)}"
+                            
+                            col_a, col_b = st.columns(2)
+                            col_a.markdown(f"[🔔 إرسال تنبيه واتساب]({link})")
+                            if col_b.button(f"تصفية الحساب ✅", key=f"pay_{idx}"):
+                                st.session_state.db.drop(idx, inplace=True); st.rerun()
+                else: st.write("الدفتر نظيف.. لا يوجد ديون.")
+
+            with tab_add:
+                st.subheader("تسجيل مديونية جديدة")
+                n_n = st.text_input("اسم العميل")
+                n_p = st.text_input("واتساب العميل")
+                n_m = st.number_input("قيمة الدين", min_value=0)
+                n_r = st.select_slider("تقييم التزام العميل (سري للتاجر)", options=["ملاوع 😡", "متوسط 😐", "ملتزم 💎"])
+                
+                if st.button("حفظ في الخزنة 💾"):
+                    new_rec = pd.DataFrame([{"الاسم": n_n, "المبلغ": n_m, "الموبايل": n_p, "الحالة": "مطلوب", "التقييم": n_r}])
+                    st.session_state.db = pd.concat([st.session_state.db, new_rec], ignore_index=True)
+                    st.success("تم الحفظ والجدولة."); st.rerun()
+        else:
+            st.warning("⚠️ عذراً، هذا القسم مخصص للتجار فقط لإدارة حساباتهم.")
+
+    # --- 3. تسجيل الخروج ---
+    if st.sidebar.button("تسجيل الخروج"):
+        st.session_state.step = "register"
+        st.rerun()
+
+st.markdown("---")
+st.markdown("<p style='text-align: center; color: gray;'>بإشراف المهندس سيلا | دكان بلس 2026 👑</p>", unsafe_allow_html=True)
         with st.expander("🐮 الحيوانات"):
             st.write("🐑 أغنام - 🐄 مواشي")
     with col2:
