@@ -4,61 +4,85 @@ import pandas as pd
 import urllib.parse
 
 # 1. إعدادات الصفحة
-st.set_page_config(page_title="دكان بلس", page_icon="🏪", layout="wide")
+st.set_page_config(page_title="دكان بلس", page_icon="👑", layout="wide")
 
 # 2. تصميم الواجهة (CSS)
 st.markdown("""
 <style>
-    @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;700&display=swap');
+    @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@700&display=swap');
     html, body, [class*="css"] { font-family: 'Cairo', sans-serif; text-align: right; direction: rtl; }
-    .stButton>button { border-radius: 15px; width: 100%; background: linear-gradient(45deg, #2e8b57, #3cb371); color: white; border: none; height: 3.5em; font-weight: bold; }
+    .stButton>button { border-radius: 12px; width: 100%; background-color: #2e8b57; color: white; border: none; height: 3em; }
 </style>
 """, unsafe_allow_html=True)
 
-# 3. إدارة الحالة (Session State)
+# 3. إدارة البيانات وحالة الدخول
 if "step" not in st.session_state:
     st.session_state.step = "register"
-if "db" not in st.session_state:
-    st.session_state.db = pd.DataFrame(columns=["الاسم", "المبلغ", "الموبايل", "الحالة", "التقييم"])
+if "clients_db" not in st.session_state:
+    st.session_state.clients_db = pd.DataFrame(columns=["الاسم", "المبلغ", "الموبايل", "الحالة", "التقييم"])
 
 st.markdown("<h1 style='text-align: center; color: #2e8b57;'>👑 دكان بلس</h1>", unsafe_allow_html=True)
 
-# --- المرحلة الأولى: بوابة الدخول ---
+# --- المرحلة الأولى: التسجيل والتوثيق ---
 if st.session_state.step == "register":
-    col1, col2, col3 = st.columns([1, 2, 1])
-    with col2:
-        st.subheader("📝 سجل هويتك التجارية")
-        u_name = st.text_input("الأسم الكامل")
-        u_phone = st.text_input("رقم الواتساب")
-        u_type = st.selectbox("نوع النشاط", ["تاجر (عرض وتحصيل)", "مشتري (بحث وتصفح)"])
-        if st.button("انطلق للإمبراطورية 🚀"):
-            if u_name and u_phone:
-                st.session_state.u_name = u_name
-                st.session_state.u_phone = u_phone
-                st.session_state.u_type = u_type
-                st.session_state.step = "home"
-                st.rerun()
-            else:
-                st.error("أكمل البيانات أولاً")
+    st.subheader("📝 إنشاء حساب جديد موثق")
+    u_name = st.text_input("الأسم الثلاثي لضمان الحقوق")
+    u_phone = st.text_input("رقم الواتساب (مثال: 2010...)")
+    u_type = st.radio("نوع الحساب", ["تاجر (لوحة تحكم)", "مشتري (تصفح)"])
+    
+    if st.button("تسجيل وتفعيل الحساب 📲"):
+        if u_name and u_phone:
+            st.session_state.u_name = u_name
+            st.session_state.u_phone = u_phone
+            st.session_state.u_type = u_type
+            st.session_state.step = "home"
+            st.success("تم التوثيق بنجاح")
+            st.rerun()
+        else:
+            st.error("من فضلك أكمل البيانات")
 
 # --- المرحلة الثانية: التطبيق الرئيسي ---
 elif st.session_state.step == "home":
-    choice = option_menu(None, ["المعرض الشامل", "دفتر الشكك", "محرك الصيد"], 
-        icons=['shop', 'journal-check', 'radar'], orientation="horizontal")
+    choice = option_menu(None, ["المعرض", "دفتر الشكك", "محرك الصيد"], 
+        icons=['shop', 'journal-text', 'map'], orientation="horizontal")
 
-    if choice == "المعرض الشامل":
-        st.info(f"مرحباً {st.session_state.u_name} في المول الرقمي 🎪")
-        c1, c2, c3 = st.columns(3)
-        with c1:
-            with st.expander("🐮 الحيوانات والأعلاف"):
-                st.write("🐑 خراف\n🐄 عجول\n🌾 أعلاف")
-        with c2:
+    if choice == "المعرض":
+        st.subheader(f"مرحباً {st.session_state.u_name}، ماذا تتصفح اليوم؟")
+        col1, col2, col3, col4 = st.columns(4)
+        with col1:
+            with st.expander("🚗 السيارات"):
+                st.write("🏎️ ملاكي\n🚛 نقل\n🏍️ موتوسيكلات")
+        with col2:
+            with st.expander("🐮 المواشي"):
+                st.write("🐑 أغنام\n🐄 عجول\n🌾 أعلاف")
+        with col3:
+            with st.expander("🦜 الطيور"):
+                st.write("🐣 زينة\n🍗 أكل\n🏗️ معدات")
+        with col4:
             with st.expander("👕 الملابس"):
                 st.write("👔 رجالي\n👗 حريمي\n👶 أطفال")
-        with c3:
-            with st.expander("⛽ خدمات"):
-                st.write("📍 بنزين\n🔥 غاز")
 
+    elif choice == "دفتر الشكك":
+        if st.session_state.u_type == "تاجر (لوحة تحكم)":
+            tab1, tab2 = st.tabs(["📓 عرض الديون", "➕ إضافة عميل"])
+            with tab2:
+                n_name = st.text_input("اسم المشتري")
+                n_phone = st.text_input("رقم واتساب المشتري")
+                n_price = st.text_input("المبلغ")
+                if st.button("تسجيل في الدفتر ➕"):
+                    new_data = pd.DataFrame([{"الاسم": n_name, "المبلغ": n_price, "الموبايل": n_phone, "الحالة": "مطلوب", "التقييم": "💎"}])
+                    st.session_state.clients_db = pd.concat([st.session_state.clients_db, new_data], ignore_index=True)
+                    st.success("تم الحفظ")
+                    st.rerun()
+        else:
+            st.warning("هذه اللوحة مخصصة للتجار فقط.")
+
+    if st.sidebar.button("تسجيل الخروج"):
+        st.session_state.step = "register"
+        st.rerun()
+
+st.markdown("---")
+st.caption("بإشراف المهندس سيلا - دكان بلس 2026")
     elif choice == "دفتر الشكك":
         if st.session_state.u_type == "تاجر (عرض وتحصيل)":
             n_n = st.text_input("اسم العميل")
