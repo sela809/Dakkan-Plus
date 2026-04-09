@@ -2,38 +2,86 @@ import streamlit as st
 from streamlit_option_menu import option_menu
 import pandas as pd
 import urllib.parse
-from datetime import datetime
 
-# 1. إعدادات الصفحة الفخمة
-st.set_page_config(page_title="دكان بلس | DAKKAN PLUS", page_icon="🏪", layout="wide")
+# 1. إعدادات الصفحة
+st.set_page_config(page_title="دكان بلس", page_icon="🏪", layout="wide")
 
-# 2. لمسات الجمال (CSS) لـ "شد" المستخدم
+# 2. تصميم الواجهة (CSS)
 st.markdown("""
 <style>
     @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;700&display=swap');
     html, body, [class*="css"] { font-family: 'Cairo', sans-serif; text-align: right; direction: rtl; }
     .stButton>button { border-radius: 15px; width: 100%; background: linear-gradient(45deg, #2e8b57, #3cb371); color: white; border: none; height: 3.5em; font-weight: bold; }
-    .stExpander { background-color: white; border-radius: 15px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
 </style>
 """, unsafe_allow_html=True)
 
 # 3. إدارة الحالة (Session State)
-if "step" not in st.session_state: st.session_state.step = "register"
-if "db" not in st.session_state: st.session_state.db = pd.DataFrame(columns=["الاسم", "المبلغ", "الموبايل", "الحالة", "التقييم"])
+if "step" not in st.session_state:
+    st.session_state.step = "register"
+if "db" not in st.session_state:
+    st.session_state.db = pd.DataFrame(columns=["الاسم", "المبلغ", "الموبايل", "الحالة", "التقييم"])
 
 st.markdown("<h1 style='text-align: center; color: #2e8b57;'>👑 دكان بلس</h1>", unsafe_allow_html=True)
-st.markdown("<p style='text-align: center; font-size: 1.2em;'>حيث تلتقي المصداقية بالتجارة الذكية</p>", unsafe_allow_html=True)
 
-# --- المرحلة الأولى: بوابة الدخول الموحدة ---
+# --- المرحلة الأولى: بوابة الدخول ---
 if st.session_state.step == "register":
     col1, col2, col3 = st.columns([1, 2, 1])
     with col2:
         st.subheader("📝 سجل هويتك التجارية")
-        u_name = st.text_input("الأسم الكامل (صاحب الدكان/المشتري)")
-        u_phone = st.text_input("رقم الواتساب الفعال")
+        u_name = st.text_input("الأسم الكامل")
+        u_phone = st.text_input("رقم الواتساب")
         u_type = st.selectbox("نوع النشاط", ["تاجر (عرض وتحصيل)", "مشتري (بحث وتصفح)"])
-        
         if st.button("انطلق للإمبراطورية 🚀"):
+            if u_name and u_phone:
+                st.session_state.u_name = u_name
+                st.session_state.u_phone = u_phone
+                st.session_state.u_type = u_type
+                st.session_state.step = "home"
+                st.rerun()
+            else:
+                st.error("أكمل البيانات أولاً")
+
+# --- المرحلة الثانية: التطبيق الرئيسي ---
+elif st.session_state.step == "home":
+    choice = option_menu(None, ["المعرض الشامل", "دفتر الشكك", "محرك الصيد"], 
+        icons=['shop', 'journal-check', 'radar'], orientation="horizontal")
+
+    if choice == "المعرض الشامل":
+        st.info(f"مرحباً {st.session_state.u_name} في المول الرقمي 🎪")
+        c1, c2, c3 = st.columns(3)
+        with c1:
+            with st.expander("🐮 الحيوانات والأعلاف"):
+                st.write("🐑 خراف\n🐄 عجول\n🌾 أعلاف")
+        with c2:
+            with st.expander("👕 الملابس"):
+                st.write("👔 رجالي\n👗 حريمي\n👶 أطفال")
+        with c3:
+            with st.expander("⛽ خدمات"):
+                st.write("📍 بنزين\n🔥 غاز")
+
+    elif choice == "دفتر الشكك":
+        if st.session_state.u_type == "تاجر (عرض وتحصيل)":
+            n_n = st.text_input("اسم العميل")
+            n_m = st.number_input("قيمة الدين", min_value=0)
+            n_p = st.text_input("واتساب العميل")
+            if st.button("حفظ في الخزنة 💾"):
+                new_rec = pd.DataFrame([{"الاسم": n_n, "المبلغ": n_m, "الموبايل": n_p, "الحالة": "مطلوب", "التقييم": "ممتاز"}])
+                st.session_state.db = pd.concat([st.session_state.db, new_rec], ignore_index=True)
+                st.success("تم الحفظ")
+                st.rerun()
+            
+            st.divider()
+            st.write("### الديون المسجلة")
+            st.table(st.session_state.db)
+        else:
+            st.warning("هذا القسم للتجار فقط.")
+
+    if st.sidebar.button("تسجيل الخروج"):
+        st.session_state.step = "register"
+        st.rerun()
+
+st.markdown("---")
+st.markdown("<p style='text-align: center; color: gray;'>بإشراف المهندس سيلا | دكان بلس 2026 👑</p>", unsafe_allow_html=True)
             if u_name and u_phone:
                 st.session_state.update({"u_name": u_name, "u_phone": u_phone, "u_type": u_type, "step": "home"})
                 st.balloons(); st.rerun()
