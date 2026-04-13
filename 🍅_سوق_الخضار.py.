@@ -1,0 +1,62 @@
+import streamlit as st
+import pandas as pd
+
+st.set_page_config(page_title="سوق الخضار - دكان بلس", layout="wide")
+
+st.markdown("<h2 style='text-align: center; color: #ff6347;'>🍅 بورصة الخضار والفاكهة</h2>", unsafe_allow_html=True)
+st.write("<p style='text-align: center;'>أسعار اليوم وتوافر الأصناف</p>", unsafe_allow_html=True)
+
+# 1. قاعدة بيانات الأصناف (لو مش موجودة بنعملها)
+if "veggies_db" not in st.session_state:
+    st.session_state.veggies_db = pd.DataFrame([
+        {"الصنف": "طماطم", "السعر_كيلو": 15.0, "الحالة": "متوفر"},
+        {"الصنف": "بطاطس", "السعر_كيلو": 20.0, "الحالة": "متوفر"},
+        {"الصنف": "بصل", "السعر_كيلو": 12.0, "الحالة": "كمية محدودة"},
+        {"الصنف": "خيار", "السعر_كيلو": 10.0, "الحالة": "متوفر"}
+    ])
+
+# 2. لوحة تحكم التاجر (تحديث الأسعار)
+with st.sidebar:
+    st.header("⚙️ إدارة الأسعار")
+    if st.checkbox("تعديل الأسعار الآن"):
+        edit_item = st.selectbox("اختر الصنف لتعديله", st.session_state.veggies_db["الصنف"])
+        new_price = st.number_input("السعر الجديد", min_value=0.0)
+        new_status = st.selectbox("حالة التوفر", ["متوفر", "خلص", "كمية محدودة"])
+        
+        if st.button("تحديث السعر ✅"):
+            idx = st.session_state.veggies_db[st.session_state.veggies_db["الصنف"] == edit_item].index
+            st.session_state.veggies_db.at[idx[0], "السعر_كيلو"] = new_price
+            st.session_state.veggies_db.at[idx[0], "الحالة"] = new_status
+            st.success(f"تم تحديث {edit_item}")
+            st.rerun()
+
+# 3. عرض البورصة للمشتري
+st.write("---")
+cols = st.columns(len(st.session_state.veggies_db))
+
+for i, row in st.session_state.veggies_db.iterrows():
+    with cols[i % 4]: # توزيع العرض على أعمدة
+        st.markdown(f"""
+        <div style="border: 2px solid #ff6347; border-radius: 15px; padding: 15px; text-align: center; background-color: #fffafa;">
+            <h3 style="color: #2e8b57;">{row['الصنف']}</h3>
+            <h2 style="color: #ff6347;">{row['السعر_كيلو']} ج.م</h2>
+            <p style="color: gray;">الحالة: {row['الحالة']}</p>
+        </div>
+        """, unsafe_allow_html=True)
+        if st.button(f"طلب {row['الصنف']} 🛒", key=f"order_{i}"):
+            st.toast(f"تم إضافة {row['الصنف']} لطلبك")
+
+st.write("---")
+# ميزة "حاسبة الشيلة"
+st.subheader("🧮 حاسبة الميزان")
+c1, c2 = st.columns(2)
+with c1:
+    pick = st.selectbox("الصنف", st.session_state.veggies_db["الصنف"])
+with c2:
+    weight = st.number_input("الوزن (كيلو)", min_value=0.0, step=0.5)
+
+price_per_kg = st.session_state.veggies_db[st.session_state.veggies_db["الصنف"] == pick]["السعر_كيلو"].values[0]
+total = price_per_kg * weight
+st.metric(label=f"الحساب لـ {pick}", value=f"{total} جنيه")
+
+st.caption("أسعار الخضار تتحدث يومياً وفقاً لسوق العبور - دكان بلس")
