@@ -1,0 +1,17 @@
+import streamlit as st
+
+st.set_page_config(page_title="محرك الصيد", page_icon="📍")
+
+st.title("📍 محرك الصيد (دليل الخدمات)")
+st.write("ابحث عن أقرب مخزن أعلاف، محل خضار، أو مورد.")
+
+search_loc = st.text_input("🔍 ابحث بالمنطقة (مثلاً: أشمون، الباجور، بهناي)")
+service_type = st.multiselect("نوع الخدمة:", ["مخزن علف", "تاجر جملة", "طبيب بيطري", "مكتب شحن"])
+
+# عرض نتائج وهمية للبدء
+if search_loc:
+    st.write(f"### النتائج في منطقة {search_loc}:")
+    st.markdown("""
+    * **مخزن الأمل للأعلاف** - 📞 012xxxxxxx
+    * **مكتب المنوفية للشحن السريع** - 📞 010xxxxxxx
+    """)
