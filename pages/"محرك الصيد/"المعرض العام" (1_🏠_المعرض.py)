@@ -1,0 +1,26 @@
+import streamlit as st
+
+st.set_page_config(page_title="معرض دكان بلس", layout="wide")
+
+st.markdown("<h2 style='text-align: center; color: #2e8b57;'>🏪 معرض المنتجات</h2>", unsafe_allow_html=True)
+
+# نظام تصنيفات البضاعة
+category = st.selectbox("اختر القسم:", ["كل المنتجات", "مواشي وأغنام", "ملابس وأقمشة", "طيور ودواجن"])
+
+# محاكاة لمنتجات (يمكن ربطها لاحقاً بملف إكسل)
+products = [
+    {"الاسم": "خروف رحماني", "السعر": 8500, "القسم": "مواشي وأغنام", "الوصف": "وزن 50 كيلو - تربية بيتي"},
+    {"الاسم": "عباية استقبال", "السعر": 450, "القسم": "ملابس وأقمشة", "الوصف": "خامة قطن ممتازة"},
+]
+
+cols = st.columns(2)
+for i, prod in enumerate(products):
+    if category == "كل المنتجات" or category == prod["القسم"]:
+        with cols[i % 2]:
+            with st.container():
+                st.markdown(f"### {prod['الاسم']}")
+                st.write(f"**السعر:** {prod['السعر']} ج.م")
+                st.caption(prod["الوصف"])
+                if st.button(f"طلب عبر الواتساب 📲", key=f"order_{i}"):
+                    st.success("جاري تحويلك للبائع...")
+            st.divider()
