@@ -1,0 +1,27 @@
+import streamlit as st
+import time
+
+st.set_page_config(page_title="ركن المحارب", page_icon="🛡️")
+
+st.markdown("<h2 style='text-align: center; color: #d4af37;'>🛡️ ركن المحارب الأنيق</h2>", unsafe_allow_html=True)
+st.write("<p style='text-align: center; font-style: italic;'>الشدائد لا تزيدنا إلا شموخاً وأناقة</p>", unsafe_allow_html=True)
+
+# 1. ميزة تفريغ الشحنة (الرسائل التي لا تُرسل)
+with st.expander("📝 صندوق تفريغ الطاقة (سري للغاية)"):
+    text = st.text_area("اكتب ما يغضبك هنا.. لن يراه أحد وسوف يختفي بمجرد الخروج")
+    if st.button("تدمير الرسالة الآن 💥"):
+        with st.spinner("جاري التخلص من الطاقة السلبية..."):
+            time.sleep(1.5)
+            st.success("تم التطهير بنجاح. عد لشموخك الآن.")
+
+# 2. حكمة اليوم (تتغير برمجياً)
+st.info("💡 **اليقين دائماً يكسب:** لا تسمح لضجيج العالم أن يحجب صوت ثقتك في طريقك.")
+
+# 3. تحدي البرمجة (لتحويل التركيز)
+st.subheader("💻 تحدي التركيز الذهني")
+st.write("حول طاقة القلق إلى إنجاز؛ حل الكود التالي:")
+code_input = st.number_input("ما هو ناتج (9 * 9) + 19؟", min_value=0)
+if st.button("تحقق من القوة 🏁"):
+    if code_input == 100:
+        st.balloons()
+        st.success("عبقري! عقلك الآن في كامل تركيزه.")
